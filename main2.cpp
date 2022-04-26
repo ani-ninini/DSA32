@@ -32,8 +32,9 @@ public:
     void printChoicesStudent()
     {
         cout << "Please enter one of the following choices:\n";
-        cout << "1:- Display marks of a student \n";
-        cout << "2:- Exit \n";
+        cout << "1:- Display marks \n";
+        cout << "2:- Change password \n";
+        cout << "3:- Exit \n";
     }
     std::map<string, double> courses;
 };
@@ -68,7 +69,26 @@ public:
                 return;
             }
             Subject sub = registered_courses[course_ID];
-            cout << sub.subject_students_list.find(student_ID)->second.second;
+            double current_student_marks = sub.subject_students_list.find(student_ID)->second.second;
+            cout << current_student_marks;
+            // cout << "Student Name and Marks scored" << endl;
+            int number_of_students_registered = sub.subject_students_list.size();
+            double total_marks_scored = 0;
+            Student max_marks_student;
+            int max_marks = 0;
+            for (auto itr : sub.subject_students_list)
+            {
+                cout << itr.first << " " << itr.second.second << endl;
+                // number_of_students_registered++;
+                total_marks_scored += itr.second.second;
+                if (max_marks < itr.second.second)
+                {
+                    max_marks = itr.second.second;
+                    max_marks_student = itr.second.first;
+                }
+            }
+            cout << "You are average + " << max_marks/number_of_students_registered-current_student_marks << "marks \n";
+            cout << "Max marks is " << max_marks << endl;
         }
         else
             cout << "Invalid Student ID" << endl;
@@ -107,7 +127,7 @@ public:
         cout << "Enter course ID" << endl;
         string course_ID;
         cin >> course_ID;
-        if (master.registered_courses.find(course_ID) == master.registered_courses.end()||master.registered_courses[course_ID].subject_students_list.find(student_ID)==master.registered_courses[course_ID].subject_students_list.end())
+        if (master.registered_courses.find(course_ID) == master.registered_courses.end() || master.registered_courses[course_ID].subject_students_list.find(student_ID) == master.registered_courses[course_ID].subject_students_list.end())
         {
             cout << "Course doesn't exist, or course doesn't contain the student \n";
             return;
@@ -115,7 +135,7 @@ public:
         cout << "Enter new marks" << endl;
         int marks;
         cin >> marks;
-        master.registered_courses[course_ID].subject_students_list[student_ID].second=marks;
+        master.registered_courses[course_ID].subject_students_list[student_ID].second = marks;
         cout << "Marks succesfully updated \n";
     }
     void addStudent()
@@ -310,6 +330,7 @@ public:
         if (master.registered_students.find(student_ID) != master.registered_students.end())
         {
             master.registered_students.erase(student_ID);
+            student_list.erase(student_ID);
             cout << "Student record successfully deleted \n";
         }
         else
@@ -378,7 +399,7 @@ void successfulStudentLogin()
 {
     student_obj.printChoicesStudent();
     int student_input_choice = 1;
-    while (student_input_choice != 2)
+    while (student_input_choice != 3)
     {
         cin >> student_input_choice;
         switch (student_input_choice)
@@ -393,6 +414,28 @@ void successfulStudentLogin()
             break;
         }
         case 2:
+        {
+            cout << "Changing password" << endl;
+            cout << "Enter student ID for confirmation" << endl;
+            string s_ID;
+            cin >> s_ID;
+            cout << "Enter old password" << endl;
+            string old_pass;
+            string new_pass;
+            cin >> old_pass;
+            if (student_list[s_ID]!=old_pass){
+                cout << "Incorrect password \n";
+            }
+            else {
+                cout << "Enter new password \n";
+                cin >> new_pass;
+                student_list[s_ID]=new_pass;
+                cout << "Password changed succesfully \n";
+            }
+            student_obj.printChoicesStudent();
+            break;
+        }
+        case 3:
         {
             cout << "Exiting the menu" << endl;
             break;
