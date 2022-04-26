@@ -4,7 +4,6 @@ using namespace std;
 
 class BITS;
 class Admin;
-class Subject;
 
 /*std::map<Student, string, compare> subject_students_list;
 struct compare
@@ -38,22 +37,38 @@ public:
     }
     std::map<string, double> courses;
 };
+class Subject
+{
+public:
+    string subject_name;
+    string subject_ID;
+    friend class Admin;
+    friend class BITS;
+
+private:
+    map<string, pair<Student, int>> subject_students_list; // student container in a subject
+};
 class BITS
 {
 public:
     friend class Admin;
     void DisplayStudentMarks(string student_ID)
     {
+        string course_ID;
         if (registered_students.find(student_ID) != registered_students.end())
         {
             Student s = registered_students[student_ID];
             cout << "Name of the student : " << s.student_name << endl;
             cout << "Student ID : " << s.student_ID << endl;
-            cout << "List of courses taken by the student and the marks scored " << endl;
-            for (auto itr : s.courses)
+            cout << "Enter course ID " << endl;
+            cin >> course_ID;
+            if (registered_courses.find(course_ID) == registered_courses.end())
             {
-                cout << itr.first << " " << itr.second << endl;
+                cout << "Course doesn't exist \n";
+                return;
             }
+            Subject sub = registered_courses[course_ID];
+            cout << sub.subject_students_list.find(student_ID)->second.second;
         }
         else
             cout << "Invalid Student ID" << endl;
@@ -66,24 +81,43 @@ private:
 };
 
 BITS master;
-class Subject
+string admin_access_key = "admin";
+map<string, string> admin_list;
+map<string, string> student_list;
+void addToStudentList(string s_ID, string pass)
 {
-public:
-    string subject_name;
-    string subject_ID;
-    friend class Admin;
-    friend class BITS;
-
-private:
-    map<string, pair<Student, int>> subject_students_list; // student container in a subject
-};
-
+    student_list[s_ID] = pass;
+}
 class Admin
 {
 public:
     string faculty_name;
     string faculty_department;
-
+    void editScore()
+    {
+        cout << "Editing a student's marks" << endl;
+        cout << "Enter student ID" << endl;
+        string student_ID;
+        cin >> student_ID;
+        if (master.registered_students.find(student_ID) == master.registered_students.end())
+        {
+            cout << "Student doesn't exist \n";
+            return;
+        }
+        cout << "Enter course ID" << endl;
+        string course_ID;
+        cin >> course_ID;
+        if (master.registered_courses.find(course_ID) == master.registered_courses.end()||master.registered_courses[course_ID].subject_students_list.find(student_ID)==master.registered_courses[course_ID].subject_students_list.end())
+        {
+            cout << "Course doesn't exist, or course doesn't contain the student \n";
+            return;
+        }
+        cout << "Enter new marks" << endl;
+        int marks;
+        cin >> marks;
+        master.registered_courses[course_ID].subject_students_list[student_ID].second=marks;
+        cout << "Marks succesfully updated \n";
+    }
     void addStudent()
     {
         Student s;
@@ -92,7 +126,15 @@ public:
         cin >> s.student_name;
         cout << "Enter Student ID" << endl;
         cin >> s.student_ID;
-        master.registered_students[s.student_ID] = s;
+        if (master.registered_students.find(s.student_ID) == master.registered_students.end())
+        {
+            master.registered_students[s.student_ID] = s;
+            addToStudentList(s.student_ID, "default");
+            cout << "Student account succesfully created \n";
+            cout << "Default password is 'default', please change it \n";
+        }
+        else
+            cout << "Duplicate student IDs cannot be allowed, please re-enter \n";
     }
     void addStudentsToCourse()
     {
@@ -218,9 +260,10 @@ public:
             cout << itr.first << " " << itr.second.second << endl;
             // number_of_students_registered++;
             total_marks_scored += itr.second.second;
-            if (max_marks < itr.second.second){
-                max_marks=itr.second.second;
-                max_marks_student=itr.second.first;
+            if (max_marks < itr.second.second)
+            {
+                max_marks = itr.second.second;
+                max_marks_student = itr.second.first;
             }
         }
         if (number_of_students_registered == 0)
@@ -234,7 +277,15 @@ public:
             cout << "Maximum score is " << max_marks_student.student_name << "" << max_marks << endl;
         }
     }
-
+    void DisplayCourses()
+    {
+        cout << "Displaying list of courses \n";
+        cout << "Course name and course ID";
+        for (auto itr : master.registered_courses)
+        {
+            cout << itr.second.subject_name << " " << itr.second.subject_ID;
+        }
+    }
     void DeleteCourses()
     {
         string student_ID, course_code;
@@ -244,11 +295,11 @@ public:
         if (master.registered_students.find(student_ID) != master.registered_students.end())
         {
             Student s = master.registered_students[student_ID];
-            s.courses.erase(course_code);
-            cout << "Course successfully deleted" << endl;
+            master.registered_courses[course_code].subject_students_list.erase(student_ID);
+            cout << "Student successfully deleted from course" << endl;
         }
         else
-            cout << "Invalid Student ID" << endl;
+            cout << "Invalid details" << endl;
     }
 
     void DeleteStudentRecord()
@@ -275,7 +326,7 @@ public:
         cout << "5:- Drop a registered course \n";
         cout << "6:- Remove a student record from the database \n";
         cout << "7:- Edit a student's marks \n";
-        cout << "8:- ";
+        cout << "8:- Display all courses \n";
         cout << "9:- Exit \n";
     }
 };
@@ -287,29 +338,13 @@ void Student::DisplayMarks(string student_ID_to_be_viewed)
 
 Student student_obj;
 Admin master_admin;
-
-string admin_access_key = "admin";
-map<string, string> admin_list;
-map<string, string> student_list;
-
 void authentication();
 
 int existingUser(string username, string password)
 {
     int username_length = (int)username.length();
-    if (username.substr(username_length - 5) == "admin")
-    {
-        if (admin_list.find(username) == admin_list.end() || admin_list[username] != password)
-        {
-            return 0;
-        }
-        else
-        {
-            return 1;
-        }
-    }
-    else if (username.substr(username_length - 7) == "student")
-    {
+    if (username_length < 7)
+    { // student
         if (student_list.find(username) == student_list.end() || student_list[username] != password)
         {
             return 0;
@@ -317,6 +352,24 @@ int existingUser(string username, string password)
         else
         {
             return 2;
+        }
+    }
+    else
+    {
+        if (username.substr(username_length - 5) == "admin")
+        {
+            if (admin_list.find(username) == admin_list.end() || admin_list[username] != password)
+            {
+                return 0;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            cout << "Invalid entry \n";
         }
     }
 }
@@ -406,17 +459,7 @@ void successfulAdminLogin()
         }
         case 7:
         {
-            cout << "Editing a student's marks";
-            cout << "Enter student ID";
-            string student_ID;
-            cin >> student_ID;
-            cout << "Enter course ID";
-            string course_ID;
-            cin >> course_ID;
-            cout << "Enter new marks";
-            int marks;
-            cin >> marks;
-
+            master_admin.editScore();
             break;
         }
         case 9:
@@ -426,9 +469,7 @@ void successfulAdminLogin()
         }
         case 8:
         {
-            /* cout << "Adding students to a course \n";
-            master_admin.addStudentsToCourse();
-            master_admin.printChoicesAdmin(); */
+            master_admin.DisplayCourses();
             break;
         }
         default:
@@ -486,7 +527,8 @@ void authentication()
         if (user_account_status_choice == 1)
         {
             cout << "You are an Existing user\n";
-            cout << "Enter your username" << endl;
+            cout << "Admins use your username \n";
+            cout << "Students use your unique studentID \n";
             cin >> username;
             cout << "Enter your password" << endl;
             cin >> password;
