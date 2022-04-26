@@ -75,7 +75,7 @@ public:
     friend class BITS;
 
 private:
-    map<string, pair<Student, string>> subject_students_list; // student container in a subject
+    map<string, pair<Student, int>> subject_students_list; // student container in a subject
 };
 
 class Admin
@@ -92,33 +92,16 @@ public:
         cin >> s.student_name;
         cout << "Enter Student ID" << endl;
         cin >> s.student_ID;
-        int flag_for_subjects = 1;
-        while (flag_for_subjects)
-        {
-            cout << "Input Course Code" << endl;
-            string course_code;
-            cin >> course_code;
-            transform(course_code.begin(), course_code.end(), course_code.begin(), ::toupper);
-            cout << "Enter Marks" << endl;
-            double marks;
-            cin >> marks;
-            s.courses[course_code] = marks;
-            cout << "Do you wish to add more subjects? 1. Yes 2. Exit" << endl;
-            cin >> user_response;
-            if (user_response == 1)
-                continue;
-            else
-                break;
-        }
         master.registered_students[s.student_ID] = s;
     }
-    void addStudentsToCourse(){
+    void addStudentsToCourse()
+    {
         int user_response;
         int flag_for_subjects = 1;
         cout << "Input course code \n";
         string course_ID_response;
         cin >> course_ID_response;
-        auto itrz =  master.registered_courses.find(course_ID_response);
+        auto itrz = master.registered_courses.find(course_ID_response);
         Subject s = itrz->second;
         while (flag_for_subjects)
         {
@@ -226,28 +209,29 @@ public:
         cin >> course_code;
         Subject s = master.registered_courses[course_code];
         cout << "Student Name and Marks scored" << endl;
-        int number_of_students_registered = 0;
+        int number_of_students_registered = s.subject_students_list.size();
         double total_marks_scored = 0;
         Student max_marks_student;
         int max_marks = 0;
-        /* for (auto itr : s.subject_students_list)
+        for (auto itr : s.subject_students_list)
         {
             cout << itr.first << " " << itr.second.second << endl;
-            number_of_students_registered++;
-            total_marks_scored += stoi(itr.second.second);
-            if (max_marks > stoi(itr.second.second)){
-                max_marks=stoi(itr.second.second);
+            // number_of_students_registered++;
+            total_marks_scored += itr.second.second;
+            if (max_marks < itr.second.second){
+                max_marks=itr.second.second;
                 max_marks_student=itr.second.first;
             }
-        } */
+        }
         if (number_of_students_registered == 0)
         {
             cout << "No students registered in this course" << endl;
         }
         else
         {
+            cout << "There are " << number_of_students_registered << " students registered to this course \n";
             cout << "The average marks scored in the course " << course_code << " is " << (total_marks_scored / number_of_students_registered) << endl;
-            cout << "Maximum scoring student is " << max_marks_student.student_name << " scoring " << max_marks << endl;
+            cout << "Maximum score is " << max_marks_student.student_name << "" << max_marks << endl;
         }
     }
 
@@ -291,7 +275,8 @@ public:
         cout << "5:- Drop a registered course \n";
         cout << "6:- Remove a student record from the database \n";
         cout << "7:- Edit a student's marks \n";
-        cout << "8:- Exit \n";
+        cout << "8:- ";
+        cout << "9:- Exit \n";
     }
 };
 
@@ -372,7 +357,7 @@ void successfulAdminLogin()
 {
     master_admin.printChoicesAdmin();
     int admin_input_choice = 1;
-    while (admin_input_choice != 8)
+    while (admin_input_choice != 9)
     {
         cin >> admin_input_choice;
         switch (admin_input_choice)
@@ -389,6 +374,7 @@ void successfulAdminLogin()
             cout << "Add a new course to the database" << endl;
             master_admin.addSubject();
             master_admin.printChoicesAdmin();
+            break;
         }
         case 3:
         {
@@ -430,16 +416,20 @@ void successfulAdminLogin()
             cout << "Enter new marks";
             int marks;
             cin >> marks;
-        }
-        case 8:
-        {
-            cout << "Exiting the menu \n";
+
             break;
         }
         case 9:
         {
-            cout << "Adding students to a course \n";
-            
+            cout << "Exiting the menu \n";
+            break;
+        }
+        case 8:
+        {
+            /* cout << "Adding students to a course \n";
+            master_admin.addStudentsToCourse();
+            master_admin.printChoicesAdmin(); */
+            break;
         }
         default:
         {
